@@ -43,6 +43,41 @@ const getAppointmentsByDate = async (req, res) => {
 
     res.json(appointments)
 }
+const getAppointmentsByDate1 = async (req, res) => {
+    try {
+        const { date } = req.query;
+
+        // Parsear la fecha del query string
+        const newDate = parse(date, 'yyyy-MM-dd', new Date());
+
+        // Verificar si la fecha es válida
+        if (!isValid(newDate)) {
+            const error = new Error('Fecha no válida');
+            return res.status(400).json({ msg: error.message });
+        }
+
+        // Crear rango de tiempo para la consulta del día completo
+        const start = startOfDay(newDate);
+        const end = endOfDay(newDate);
+
+        // Realizar la consulta para obtener las citas del día
+        const appointments = await Appointment
+            .find({ date: { $gte: start, $lte: end } })  // Ajustar la consulta
+            .populate('services')
+            .populate({ path: 'user', select: 'name email' })
+            .sort({ date: 'asc' });
+
+        // Devolver las citas encontradas
+        res.json(appointments);
+
+    } catch (error) {
+        // Manejo de errores
+        console.error(error);
+        res.status(500).json({ msg: 'Hubo un error al obtener las citas' });
+    }
+};
+
+
 
 
 const getAppointmentById = async (req, res) => {
@@ -142,6 +177,7 @@ const deleteAppointment = async (req, res) => {
 export {
     createAppointment,
     getAppointmentsByDate,
+    getAppointmentsByDate1,
     getAppointmentById,
     updateAppointment,
     deleteAppointment

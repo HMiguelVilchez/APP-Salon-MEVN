@@ -6,6 +6,7 @@ import { db } from './config/db.js';
 import ServicesRoutes from './routes/servicesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import appointmentRoutes1 from './routes/appointmentRoutes1.js';
 import userRoutes from './routes/userRoutes.js';
 import cookieParser from "cookie-parser";
 const app = express();
@@ -45,6 +46,7 @@ db();
 app.use('/services', ServicesRoutes);
 app.use('/auth', authRoutes);
 app.use('/appointments', appointmentRoutes);
+app.use('/appointmentss', appointmentRoutes1);
 app.use('/users', userRoutes);
 
 // Definir puerto
