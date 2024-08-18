@@ -53,7 +53,7 @@ const getServicesById = async (req, res) => {
 }
 
 const updateService = async (req, res) => {
-    console.log('desde updateService')
+    //console.log('desde updateService')
     const { id } = req.params
 
     //𝕍𝕒𝕝𝕚𝕕𝕒𝕣 𝕦𝕟 𝕆𝕓𝕛𝕖𝕔𝕥 𝕚𝕕
