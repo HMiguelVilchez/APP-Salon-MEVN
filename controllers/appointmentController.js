@@ -1,7 +1,9 @@
 import { parse, formatISO, startOfDay, endOfDay, isValid } from 'date-fns'
 import Appointment from '../models/Appointment.js'
 import { validateObjectId, handleNotFoundError, formatDate } from '../utils/index.js'
-import { sendEmailCancelAppointment, sendEmailNewAppointment, sendEmailUpdateAppointment } from '../emails/appointmentEmailService.js'
+import { sendEmailCancelAppointment, sendEmailNewAppointment, sendEmailNewAppointment1, sendEmailUpdateAppointment } from '../emails/appointmentEmailService.js'
+import Voucher from '../models/Voucher.js';
+
 
 const createAppointment = async (req, res) => {
     const appointment = req.body
@@ -66,7 +68,7 @@ const getAppointmentsByDate1 = async (req, res) => {
             .populate('services')
             .populate({ path: 'user', select: 'name email' })
             .sort({ date: 'asc' });
-
+            
         // Devolver las citas encontradas
         res.json(appointments);
 
@@ -100,6 +102,109 @@ const getAppointmentById = async (req, res) => {
     //Retornar la cita
     res.json(appointment)
 }
+export const postvouchers = async (req, res) => {
+    try {
+        const { description, amount, date } = req.body;
+
+        // Si se proporciona una fecha, usarla; de lo contrario, usar la fecha y hora actual
+        let voucherDate;
+        if (date) {
+            voucherDate = parse(date, 'yyyy-MM-dd', new Date());
+            if (!isValid(voucherDate)) {
+                return res.status(400).json({ message: 'Fecha no válida' });
+            }
+        } else {
+            voucherDate = new Date(); // Usar la fecha y hora actual
+        }
+
+        // Crear un nuevo documento de vale
+        const newVoucher = new Voucher({
+            amount,
+            date: voucherDate,
+            description,
+        });
+
+        // Guardar el vale en la base de datos
+        await newVoucher.save();
+        await sendEmailNewAppointment1({
+            date: formatISO(newVoucher.date),
+            amount: newVoucher.amount,
+            description: newVoucher.description
+        });
+        
+        // Enviar respuesta de éxito
+        res.status(200).json({ message: 'Vale creado exitosamente', voucher: newVoucher });
+    } catch (error) {
+        console.error('Error al crear el vale:', error);
+        res.status(500).json({ message: 'Error al crear el vale' });
+    }
+};
+
+export const getvouchers = async (req, res) => {
+    try {
+        // Obtener la fecha del parámetro de consulta
+        const { date } = req.query;
+
+        // Verificar si se proporcionó una fecha
+        if (!date) {
+            return res.status(400).json({ msg: 'Debe proporcionar una fecha' });
+        }
+
+        // Establecer el inicio y final del día para la fecha proporcionada
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Filtrar los vales por la fecha especificada
+        const vouchers = await Voucher.find({
+            date: {
+                $gte: startOfDay,
+                $lte: endOfDay,
+            },
+        });
+
+        res.status(200).json(vouchers);
+    } catch (error) {
+        res.status(500).json({ msg: 'Error al obtener los vales', error });
+    }
+};
+export const getvouchers1 = async (req, res) => {
+    try {
+        const { date } = req.query;
+
+        // Parsear la fecha del parámetro de consulta
+        const newDate = parse(date, 'yyyy-MM-dd', new Date());
+
+        // Validar si la fecha es válida
+        if (!isValid(newDate)) {
+            return res.status(400).json({
+                msg: 'Fecha no válida'
+            });
+        }
+
+        // Convertir la fecha a formato ISO
+        const isoDate = formatISO(newDate);
+
+        // Buscar los vales para el rango de fechas especificado
+        const vouchers = await Voucher.find({
+            date: {
+                $gte: startOfDay(new Date(isoDate)),
+                $lte: endOfDay(new Date(isoDate))
+            }
+        }).select('amount date description'); // Selecciona los campos necesarios
+
+        // Enviar la respuesta con los vales encontrados
+        res.json(vouchers);
+    } catch (error) {
+        console.error('Error al obtener los vales:', error);
+        res.status(500).json({
+            msg: 'Error al obtener los vales'
+        });
+    }
+};
+
 
 const updateAppointment = async (req, res) => {
     const { id } = req.params

@@ -28,6 +28,12 @@ const userSchema = mongoose.Schema({
     verified: {
         type: Boolean,
         default: false
+    
+    },
+    superauth: {
+        type: Boolean,
+        default: false
+        
     },
     admin: {
         type: Boolean,

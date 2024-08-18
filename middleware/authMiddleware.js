@@ -22,6 +22,19 @@ const authMiddleware = async ( req, res, next) => {
     }
 }
 
+export const adminMiddleware = (req, res, next) => {
+    if (!req.user.admin) {
+        return res.status(403).json({ message: 'Access denied, admin only' })
+    }
+    next()
+}
+
+export const superauthMiddleware = (req, res, next) => {
+    if (!req.user.superauth) {
+        return res.status(403).json({ message: 'Access denied, superauth only' })
+    }
+    next()
+}
 
 export default authMiddleware
 
