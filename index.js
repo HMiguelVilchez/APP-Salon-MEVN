@@ -13,7 +13,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 // Variables de entorno
 dotenv.config();
-const whiteList = [process.env.ORIGIN1, process.env.ORIGIN2];
+const whiteList = [process.env.ORIGIN1, process.env.ORIGIN2, process.env.ORIGIN3];
 
 app.use(
     cors({
