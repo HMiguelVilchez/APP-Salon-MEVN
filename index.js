@@ -10,6 +10,7 @@ import appointmentRoutes1 from './routes/appointmentRoutes1.js';
 import appointmentRoutes2 from './routes/appointmentRoutes2.js';
 import vouchersRoutes from './routes/vouchersRoutes.js'; // Asegúrate de que la ruta sea correcta
 import userRoutes from './routes/userRoutes.js';
+import userRoutes1 from './routes/userRoutes1.js';
 import cookieParser from "cookie-parser";
 const app = express();
 // Variables de entorno
@@ -52,6 +53,7 @@ app.use('/appointmentss', appointmentRoutes1);
 app.use('/appointmentsss', appointmentRoutes2);
 app.use('/vouchers', vouchersRoutes); // Corrección realizada aquí
 app.use('/users', userRoutes);
+app.use('/userss', userRoutes1);
 
 
 // Definir puerto

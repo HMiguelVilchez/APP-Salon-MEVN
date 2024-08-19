@@ -16,6 +16,11 @@ const appointmentSchema = mongoose.Schema({
     totalAmount: {
         type: Number
     },
+    phonecita: {
+        type: String,
+        trim: true,
+        ref: 'Phone'
+    },
     selectedBarber: {
         type: mongoose.Schema.Types.ObjectId,  // Asegúrate de usar ObjectId si este campo es una referencia a otra colección
         ref: 'Barber'  // Asumiendo que tienes una colección de barberos

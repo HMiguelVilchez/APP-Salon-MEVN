@@ -5,29 +5,46 @@ import { sendEmailCancelAppointment, sendEmailNewAppointment, sendEmailNewAppoin
 import Voucher from '../models/Voucher.js';
 import mongoose from 'mongoose';
 
+const barberMapping = {
+    '66b63e2afc053ca48e515452': 'Cruz', // ObjectId para Cruz
+    '66b63e2afc053ca48e515453': 'David', // ObjectId para David
+};
+
+
 const createAppointment = async (req, res) => {
     const appointment = req.body;
 
-    // Asegúrate de que `selectedBarber` esté definido y sea un `ObjectId` válido
+    // Validar que `selectedBarber` esté definido y sea un ObjectId válido
     if (!appointment.selectedBarber || !mongoose.Types.ObjectId.isValid(appointment.selectedBarber)) {
         return res.status(400).json({ msg: 'Barbero seleccionado no válido' });
     }
 
+    // Asignar el ID del usuario actual y su número de teléfono a la cita
     appointment.user = req.user._id.toString();
+    appointment.phonecita = req.user.phone;
 
     try {
+        // Crear una nueva instancia de cita y guardarla en la base de datos
         const newAppointment = new Appointment(appointment);
         const result = await newAppointment.save();
+        
 
+        const barberName = barberMapping[result.selectedBarber];
+
+        // Enviar correo electrónico de confirmación
         await sendEmailNewAppointment({
             date: formatDate(result.date),
-            time: result.time
+            time: result.time,
+            totalAmount : result.totalAmount,
+            barberName: barberName,
+            phonecita: result.phonecita
         });
 
+        // Responder con éxito
         res.json({ msg: 'Tu reserva se ha realizado correctamente' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Hubo un error al crear la cita' });
+        console.error('Error al crear la cita:', error);
+        res.status(500).json({ msg: 'Hubo un error al crear la cita', error: error.message });
     }
 };
 
@@ -251,78 +268,101 @@ export const getvouchers1 = async (req, res) => {
 
 
 const updateAppointment = async (req, res) => {
-    const { id } = req.params
-    //Validar por Object id
-    if (validateObjectId(id, res)) return
-    //Validar que exista
-    const appointment = await Appointment.findById(id).populate('services')
-    if (!appointment) {
-        return handleNotFoundError('La cita no existe', res)
-    }
-
-    // console.log(appointment.user.toString())
-    // console.log(req.user._id.toString())
-    if (appointment.user.toString() !== req.user._id.toString()) {
-        const error = new Error('No tienes los permisos')
-        return res.status(403).json({ msg: error.message })
-    }
-
-    const { date, time, totalAmount, services } = req.body
-    appointment.date = date
-    appointment.time = time
-    appointment.totalAmount = totalAmount
-    appointment.services = services
-
-    try {
-        const result = await appointment.save()
-        await sendEmailUpdateAppointment({ date: formatDate(result.date), time: result.time })
-        res.json({
-            msg: 'Cita actualizada correctamente'
-        })
-
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-const deleteAppointment = async (req, res) => {
-    const { id } = req.params
+    const { id } = req.params;
 
     // Validar por Object id
-    if (validateObjectId(id, res)) return
+    if (validateObjectId(id, res)) return;
 
     // Validar que exista
-    const appointment = await Appointment.findById(id).populate('services')
+    const appointment = await Appointment.findById(id).populate('services');
     if (!appointment) {
-        return handleNotFoundError('La cita no existe', res)
+        return handleNotFoundError('La cita no existe', res);
     }
 
     if (appointment.user.toString() !== req.user._id.toString()) {
-        const error = new Error('No tienes los permisos')
-        return res.status(403).json({ msg: error.message })
+        const error = new Error('No tienes los permisos');
+        return res.status(403).json({ msg: error.message });
     }
 
-    const { date, time, totalAmount, services } = req.body
-    appointment.date = date
-    appointment.time = time
-    appointment.totalAmount = totalAmount
-    appointment.services = services
+    const { date, time, totalAmount, services, phonecita, selectedBarber } = req.body;
+    appointment.date = date;
+    appointment.time = time;
+    appointment.totalAmount = totalAmount;
+    appointment.services = services;
+    appointment.phonecita = phonecita;
+    appointment.selectedBarber = selectedBarber;
+
+    try {
+        // Guarda la cita actualizada
+        const result = await appointment.save();
+
+        // Obtener el nombre del barbero
+        const barberName = barberMapping[result.selectedBarber];
+
+        // Enviar correo electrónico de actualización
+        await sendEmailUpdateAppointment({
+            date: formatDate(result.date),
+            time: result.time,
+            phonecita: result.phonecita,
+            totalAmount: result.totalAmount,
+            barberName: barberName // Incluye el nombre del barbero en el correo
+        });
+
+        // Responder con éxito
+        res.json({
+            msg: 'Cita actualizada correctamente'
+        });
+
+    } catch (error) {
+        console.log('Error al actualizar la cita:', error);
+        res.status(500).json({ msg: 'Hubo un error al actualizar la cita', error: error.message });
+    }
+};
+
+
+const deleteAppointment = async (req, res) => {
+    const { id } = req.params;
+
+    // Validar por Object id
+    if (validateObjectId(id, res)) return;
+
+    // Validar que exista
+    const appointment = await Appointment.findById(id).populate('services');
+    if (!appointment) {
+        return handleNotFoundError('La cita no existe', res);
+    }
+
+    if (appointment.user.toString() !== req.user._id.toString()) {
+        const error = new Error('No tienes los permisos');
+        return res.status(403).json({ msg: error.message });
+    }
 
     try {
         // Obtener el documento antes de eliminarlo
-        const result = await Appointment.findByIdAndDelete(id)
-        
-        // Usar el documento para enviar el correo
-        await sendEmailCancelAppointment({ date: formatDate(result.date), time: result.time })
+        const result = await Appointment.findByIdAndDelete(id);
+
+        // Obtener el nombre del barbero usando `barberMapping`
+        const barberName = barberMapping[result.selectedBarber];
+
+        // Enviar correo electrónico de cancelación
+        await sendEmailCancelAppointment({
+            date: formatDate(result.date),
+            time: result.time,
+            phonecita: result.phonecita,
+            totalAmount: result.totalAmount,
+            barberName: barberName // Incluye el nombre del barbero en el correo
+        });
 
         res.json({
             msg: 'Cita cancelada correctamente'
-        })
+        });
+
     } catch (error) {
-        console.error('Error al cancelar la cita:', error)
-        return res.status(500).json({ msg: 'Error al cancelar la cita' })
+        console.error('Error al cancelar la cita:', error);
+        return res.status(500).json({ msg: 'Error al cancelar la cita' });
     }
-}
+};
+
 export {
     createAppointment,
     getAppointmentsByDate,

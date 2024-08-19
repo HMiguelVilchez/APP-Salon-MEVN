@@ -31,7 +31,7 @@ async function sendEmail({ subject, html }) {
     }
 }
 
-export async function sendEmailNewAppointment({ date, time }) {
+export async function sendEmailNewAppointment({ date, time, phonecita, totalAmount,barberName }) {
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="es">
@@ -69,9 +69,12 @@ export async function sendEmailNewAppointment({ date, time }) {
             <p>Hola Cruz,</p>
             <p>Te informamos que se ha programado una nueva cita.</p>
             <p><strong>Detalles de la Cita:</strong></p>
+            <p><strong>Barbero:</strong> ${barberName}</p>
             <p><strong>Fecha:</strong> ${date}</p>
             <p><strong>Hora:</strong> ${time}</p>
-            <p>Si tienes alguna pregunta, no dudes en ponerte en contacto con nosotros.</p>
+            <p><strong>Numero:</strong> ${phonecita}</p>
+            <p><strong>Monto Total:</strong> ${totalAmount}</p>
+            <p>Si tienes alguna duda, no dudes en contactarlo.</p>
             <p>Saludos,<br/>El equipo de CruzBarberShop</p>
         </div>
     </body>
@@ -161,7 +164,7 @@ export async function sendEmailNewAppointment1({ date, amount, description }) {
     });
 }
 
-export async function sendEmailUpdateAppointment({ date, time }) {
+export async function sendEmailUpdateAppointment({ date, time, phonecita, totalAmount, barberName}) {
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="es">
@@ -198,9 +201,12 @@ export async function sendEmailUpdateAppointment({ date, time }) {
             <h1>CruzBarberShop</h1>
             <p>Hola Cruz,</p>
             <p>Un usuario ha modificado la cita.</p>
+            <p><strong>Barbero:</strong> ${barberName}</p>
             <p><strong>Nueva Fecha:</strong> ${date}</p>
             <p><strong>Hora:</strong> ${time}</p>
-            <p>Para más detalles, por favor contáctanos.</p>
+            <p><strong>Telefono:</strong> ${phonecita}</p>
+            <p><strong>Monto Total:</strong> ${totalAmount}</p>
+            <p>Para más detalles, por favor no dudes en contáctarlo.</p>
             <p>Saludos,<br/>El equipo de CruzBarberShop</p>
         </div>
     </body>
@@ -213,7 +219,7 @@ export async function sendEmailUpdateAppointment({ date, time }) {
     });
 }
 
-export async function sendEmailCancelAppointment({ date, time }) {
+export async function sendEmailCancelAppointment({ date, time, phonecita, totalAmount, barberName }) {
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="es">
@@ -250,9 +256,12 @@ export async function sendEmailCancelAppointment({ date, time }) {
             <h1>CruzBarberShop</h1>
             <p>Hola Cruz,</p>
             <p>Un usuario ha cancelado una cita.</p>
+            <p><strong>Barbero:</strong> ${barberName}</p>
             <p><strong>Fecha de la Cita:</strong> ${date}</p>
             <p><strong>Hora:</strong> ${time}</p>
-            <p>Si tienes preguntas, no dudes en contactarnos.</p>
+            <p><strong>Telefono:</strong> ${phonecita}</p>
+            <p><strong>Monto Total:</strong> ${totalAmount}</p>
+            <p>Si tienes alguna duda, no dudes en contactarlo.</p>
             <p>Saludos,<br/>El equipo de CruzBarberShop</p>
         </div>
     </body>

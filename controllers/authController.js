@@ -6,8 +6,6 @@ import {
 import { generateJWT, uniqueId } from "../utils/index.js";
 
 const register = async (req, res) => {
-  // console.log(req.body)
-  //Valida todos los campos
   if (Object.values(req.body).includes("")) {
     const error = new Error("Todos los campos son obligatorios");
     return res.status(400).json({
@@ -15,7 +13,7 @@ const register = async (req, res) => {
     });
   }
 
-  const { email, password, name } = req.body;
+  const { email, password, name, phone } = req.body;
   //Evitar duplicados
 
   const userExist = await User.findOne({ email });
@@ -45,8 +43,8 @@ const register = async (req, res) => {
     const result = await user.save();
     // console.log(result)
 
-    const { name, email, token } = result;
-    sendEmailVerification({ name, email, token });
+    const { name, email, token,phone } = result;
+    sendEmailVerification({ name, email, token,phone });
 
     res.json({
       msg: "El usuario se creó correctamente, revisa tu email",
