@@ -3,26 +3,33 @@ import Appointment from '../models/Appointment.js'
 import { validateObjectId, handleNotFoundError, formatDate } from '../utils/index.js'
 import { sendEmailCancelAppointment, sendEmailNewAppointment, sendEmailNewAppointment1, sendEmailUpdateAppointment } from '../emails/appointmentEmailService.js'
 import Voucher from '../models/Voucher.js';
-
+import mongoose from 'mongoose';
 
 const createAppointment = async (req, res) => {
-    const appointment = req.body
-    appointment.user = req.user._id.toString()
-    try {
-        const newAppointment = new Appointment(appointment)
-        console.log(newAppointment)
-        const result = await newAppointment.save()
+    const appointment = req.body;
 
-        await sendEmailNewAppointment({ date: formatDate(result.date), time: result.time })
-
-        res.json({
-            msg: 'Tu reserva se ha realizado correctamente'
-        })
-
-    } catch (error) {
-        console.log(error)
+    // Asegúrate de que `selectedBarber` esté definido y sea un `ObjectId` válido
+    if (!appointment.selectedBarber || !mongoose.Types.ObjectId.isValid(appointment.selectedBarber)) {
+        return res.status(400).json({ msg: 'Barbero seleccionado no válido' });
     }
-}
+
+    appointment.user = req.user._id.toString();
+
+    try {
+        const newAppointment = new Appointment(appointment);
+        const result = await newAppointment.save();
+
+        await sendEmailNewAppointment({
+            date: formatDate(result.date),
+            time: result.time
+        });
+
+        res.json({ msg: 'Tu reserva se ha realizado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Hubo un error al crear la cita' });
+    }
+};
 
 const getAppointmentsByDate = async (req, res) => {
     const { date } = req.query
@@ -78,6 +85,43 @@ const getAppointmentsByDate1 = async (req, res) => {
         res.status(500).json({ msg: 'Hubo un error al obtener las citas' });
     }
 };
+
+const getAppointmentsByDate2 = async (req, res) => {
+    try {
+        const { date, barber } = req.query;
+
+        // Parsear la fecha del query string
+        const newDate = parse(date, 'dd/MM/yyyy', new Date());
+
+        // Verificar si la fecha es válida
+        if (!isValid(newDate)) {
+            const error = new Error('Fecha no válida');
+            return res.status(400).json({ msg: error.message });
+        }
+
+        // Crear rango de tiempo para la consulta del día completo
+        const start = startOfDay(newDate);
+        const end = endOfDay(newDate);
+
+        // Crear objeto de consulta
+        let query = { date: { $gte: start, $lte: end } };
+
+        // Agregar filtro de barbero si está presente
+        if (barber) {
+            query.selectedBarber = barber; // Asegúrate de que el campo en el modelo sea `selectedBarber`
+        }
+
+        // Ejecutar la consulta en la base de datos
+        const appointments = await Appointment.find(query, 'time date selectedBarber');
+
+        // Devolver los resultados
+        res.json(appointments);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Error al obtener citas' });
+    }
+};
+
 
 
 
@@ -283,6 +327,7 @@ export {
     createAppointment,
     getAppointmentsByDate,
     getAppointmentsByDate1,
+    getAppointmentsByDate2,
     getAppointmentById,
     updateAppointment,
     deleteAppointment

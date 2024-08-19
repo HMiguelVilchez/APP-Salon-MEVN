@@ -7,6 +7,7 @@ import ServicesRoutes from './routes/servicesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import appointmentRoutes1 from './routes/appointmentRoutes1.js';
+import appointmentRoutes2 from './routes/appointmentRoutes2.js';
 import vouchersRoutes from './routes/vouchersRoutes.js'; // Asegúrate de que la ruta sea correcta
 import userRoutes from './routes/userRoutes.js';
 import cookieParser from "cookie-parser";
@@ -48,6 +49,7 @@ app.use('/services', ServicesRoutes);
 app.use('/auth', authRoutes);
 app.use('/appointments', appointmentRoutes);
 app.use('/appointmentss', appointmentRoutes1);
+app.use('/appointmentsss', appointmentRoutes2);
 app.use('/vouchers', vouchersRoutes); // Corrección realizada aquí
 app.use('/users', userRoutes);
 
